@@ -1,0 +1,270 @@
+#+TITLE: Matt's Emacs Config (WSL for Home Machine)
+#+AUTHOR: Matthew Sakkas
+#+DESCRIPTION: An org-babel based Emacs configuration
+#+LANGUAGE: en
+#+PROPERTY: results silent
+#+STARTUP: showall
+#+LATEX_CLASS_OPTIONS: [letterpaper, 12pt]
+#+OPTIONS: toc:nil
+#+OPTIONS: num:nil
+#+LATEX_HEADER: \usepackage[margin=1.0in]{geometry}
+#+LATEX_HEADER: \usepackage{indentfirst}
+#+LATEX_HEADER: \setlength{\parskip}{\baselineskip}
+#+LATEX_HEADER: \usepackage{pdfpages}
+#+LATEX_HEADER: \usepackage{soul}
+#+LATEX_HEADER: \usepackage{color}
+#+LATEX_HEADER: \usepackage{hyperref}
+#+LATEX_HEADER: \hypersetup{colorlinks=true, allcolors=blue}
+#+LATEX_HEADER: \usepackage{lastpage}
+#+LATEX_HEADER: \usepackage{fancyhdr}
+#+LATEX_HEADER: \pagestyle{fancy}
+#+LATEX_HEADER: \chead{Matt's Emacs Config (WSL for Home Machine)}
+#+LATEX_HEADER: \lhead{}
+#+LATEX_HEADER: \rhead{}
+#+LATEX_HEADER: \cfoot{{Page \thepage} of \pageref{LastPage}}
+#+LATEX_HEADER: \lfoot{}
+#+LATEX_HEADER: \rfoot{}
+#+LATEX: \thispagestyle{plain}
+#+LATEX: \large
+
+* Using Org File to Configure Emacs
+  - I took this setup from [[https://xvrdm.github.io/2017/05/29/a-minimal-emacs-setup-with-orgmode/][minimal-emacs-setup-with-orgmode]].
+  - When Emacs is started, it tries to load an init file from one of the following:
+    - \texttt{$\sim$/.emacs},
+    - \texttt{$\sim$/.emacs.el}, or
+    - \texttt{$\sim$/.emacs.d/init.el}.
+
+** Where Windows Finds Init File
+  - Here is a good explanation of where emacs searches for an init file: [[http://ergoemacs.org/emacs/emacs_mswin.html#:~:text=On%20Windows%2010%2C%20Windows%208,emacs][emacs in windows]].
+  - By default in Windows emacs will look in the following places:
+    - ~%HOMEPATH%\AppData\Roaming\.emacs~
+    - ~%HOMEPATH%\AppData\Roaming\.emacs.d\init.el~
+  - But a better way is to create the environment variable named ~HOME~ (like [[https://www.emacswiki.org/emacs/MsWindowsDotEmacs][this]]) and populate it with the directory where you want to put the init file.
+  - BTW, it doesn't matter where you install emacs.  As long as you have a ~HOME~ environment variable, emacs knows where to look for its config files.
+
+** Steps to Setting Up Org File to Configure Emacs
+   1. Delete file \texttt{$\sim$/.emacs} if you have one.
+   2. Create dir \texttt{$\sim$/.emacs.d/} if you don't have one.
+   3. Create file \texttt{$\sim$/.emacs.d/init.el} if you don't have one.
+   4. Put the ~init.el~ (see below) into \texttt{$\sim$/.emacs.d/init.el}.
+   5. Setup the \texttt{$\sim$/.emacs.d/emacs-config.org} file.
+
+** Code for ~init.el~
+#+ATTR_LATEX: :center nil
+#+BEGIN_EXAMPLE
+% This is the code for init.el
+(require 'package)
+(setq load-prefer-newer t
+      package-enable-at-startup nil)
+
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+             ("gnu"   . "https://elpa.gnu.org/packages/")))
+
+(package-initialize)
+
+;; Bootstrap `use-package'
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+;; load org package and our emacs-config.org file
+(require 'org)
+(org-babel-load-file "~/.emacs.d/emacs-config.org") 
+#+END_EXAMPLE
+
+** Purpose of ~/.emacs.d/init.el~
+   1. Allow emacs to download packages from the MELPA package server.
+   2. Install the ~use-package~ package to simplify package management.
+   3. Load the ~org~ package.
+   4. Use the ~org-babel-load-file~ function to load and execute the code inside \texttt{$\sim$/.emacs.d/emacs-config.org}.
+
+Everything else is installed and configured in ~emacs-config.org~.
+
+* Basic Settings
+
+#+BEGIN_SRC emacs-lisp
+   ;suppress startup splash-screen
+   (setq inhibit-startup-screen t)
+
+   ;disable the scroll bar
+   (toggle-scroll-bar -1)
+
+   ;disable the toolbar
+   (tool-bar-mode -1)
+
+   ;non-nil invokes Continuous mode
+   ;reaching the page edge advances to next/previous page
+   (setq doc-view-continuous t)
+
+   ;non-nil ignores case in file name completion
+   (setq read-file-name-completion-ignore-case t)
+
+   ;globally enable visual line mode (i.e. buffer 'word-wrap')
+   (global-visual-line-mode 1) 
+
+   ;typed text replaces the active selection
+   (delete-selection-mode 1)
+
+    (use-package paren
+      :config
+      ;toggle visualization of matching parens
+      (show-paren-mode 1)
+      ;set zero delay to showing a matching paren
+      (setq show-paren-delay 0))
+
+    ;go right into maximized screen
+    (toggle-frame-maximized)
+
+    ;set default font to 16 pt (values are in .1 pt)
+    (set-face-attribute 'default nil :height 180)
+
+    ;enable upcase-region (bound to C-x C-u)
+    (put 'upcase-region 'disabled nil)
+
+    ;enable downcase-region (bound to C-x C-l)
+    (put 'downcase-region 'disabled nil)
+
+    ;remap the function 'list-buffers' to the function 'buffer-menu'
+    ; which shows a list of buffers in a window with focus - "T" toggles the buffers for visited files.
+    (global-set-key (kbd "C-x C-b") 'buffer-menu)
+
+#+END_SRC
+
+* Dired
+
+#+BEGIN_SRC emacs-lisp
+  (use-package dired-x
+    ;open multiple files by marking, then F to open
+    :ensure nil)
+
+  ;kills the Dired buffer (using "a" key),
+  ;then visits the current line's file or directory
+  (put 'dired-find-alternate-file 'disabled nil)
+
+  ;this function needs better commenting for purpose
+  (defun matt-dired-mode-setup ()
+    "To be run as hook for `dired-mode'."
+    (dired-hide-details-mode 1))
+
+  ;In Dired '(' toggles dired-hide-details-mode.
+  (add-hook 'dired-mode-hook 'matt-dired-mode-setup)
+
+  ;switches: all, ignore backups, human-readable, long (required)
+  (setq dired-listing-switches "-aBhl --group-directories-first")
+#+END_SRC
+
+* Time Formatting (for Dired)
+  - By default emacs displays "recent" files with a higher-resolution timestamp than "older" files.
+  - This makes time sorting of files in dired messy.
+  - So, below, I set the time format uniform for both recent and older files.
+
+#+BEGIN_SRC emacs-lisp
+(setq ls-lisp-format-time-list  '("%Y.%m.%d %H:%M" "%Y.%m.%d %H:%M")
+      ls-lisp-use-localized-time-format t)
+#+END_SRC
+
+* Themes
+  - You can only choose one at a time!
+  - You can comment-out a code block by putting a space right after the # sign.
+
+#+BEGIN_SRC emacs-lisp
+(load-theme 'tsdh-dark t)
+#+END_SRC
+
+* Browse-Kill-Ring
+  - Install this with package manager, then delete the custom\_variables from ~init.el~.
+
+#+BEGIN_SRC emacs-lisp
+    (use-package browse-kill-ring
+      :bind ("M-y" . browse-kill-ring)
+      :config
+      ;act like yank-pop
+      (setq browse-kill-ring-replace-yank t))
+
+    (provide 'init-browse-kill-ring)
+#+END_SRC
+
+* \LaTeX
+
+#+BEGIN_SRC emacs-lisp
+   (use-package latex
+     :defer t
+     :ensure auctex
+     :mode ("\\.tex\\'" . LaTeX-mode) ; this line fixed problem of auctex not loading
+     :config
+     (setq TeX-auto-save t)
+     (setq TeX-parse-self t)
+     (use-package preview)
+     (add-hook 'LaTeX-mode-hook 'reftex-mode)
+   )
+
+   ;; allow org-mode and elisp to run latex snippets 
+   (org-babel-do-load-languages
+    'org-babel-load-languages
+    '((latex . t) (org . t) (emacs-lisp . t))) 
+#+END_SRC
+
+* aspell
+#+begin_src elisp
+(setq ispell-program-name "aspell")
+#+end_src
+
+* pdftools
+  - I got the below, very nice, config from here: [[http://alberto.am/2020-04-11-pdf-tools-as-default-pdf-viewer.html][Alberto Alvarez]].
+
+#+BEGIN_SRC emacs-lisp
+  (use-package pdf-tools
+     :pin manual
+     :config
+     (pdf-tools-install)
+     (setq-default pdf-view-display-size 'fit-width)
+     (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)
+     :custom
+     (pdf-annot-activate-created-annotations t "automatically annotate highlights"))
+
+  (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+	TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view))
+	TeX-source-correlate-start-server t)
+
+  (add-hook 'TeX-after-compilation-finished-functions
+	    #'TeX-revert-document-buffer)
+#+END_SRC
+
+* org-pdftools
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-pdftools
+  :hook (org-mode . org-pdftools-setup-link))
+
+(add-to-list 'org-file-apps '("\\.pdf\\'" . emacs))
+#+END_SRC
+
+* vertico - completion framework
+  - I got vertico idea and config from [[https://www.youtube.com/watch?v=J0OaRy85MOo][this System Crafters video]].
+
+#+BEGIN_SRC emacs-lisp
+(use-package vertico
+  :ensure t
+  :init
+  (vertico-mode))
+#+END_SRC
+  
+* yasnippet
+
+#+BEGIN_SRC emacs-lisp this is old
+  (use-package yasnippet
+  :config
+  (setq yas-snippet-dirs
+  '("/mnt/c/Users/matt/Dropbox/math_and_prog/emacs/yasnippet/snippets/"))
+  (setq yas-use-menu '("full"))
+  (yas-global-mode 1))
+#+END_SRC
+
+* ace-window
+
+#+BEGIN_SRC emacs-lisp
+(use-package ace-window
+  :ensure t
+  :init (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)) ; override default keys to select windows
+  :bind (("C-x o" . ace-window))) ; override default key binding
+#+END_SRC

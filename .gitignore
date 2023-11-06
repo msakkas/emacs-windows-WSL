@@ -1,0 +1,8 @@
+# Ignore everything:
+*
+
+# But DON'T ignore these:
+!.gitignore
+!*.org
+!init.el
+!*.pdf
