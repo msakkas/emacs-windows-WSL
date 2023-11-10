@@ -1,4 +1,4 @@
-#+TITLE: Matt's Emacs Config (WSL for Home Machine)
+#+TITLE: Matt's Emacs Config: Windows-WSL
 #+AUTHOR: Matthew Sakkas
 #+DESCRIPTION: An org-babel based Emacs configuration
 #+LANGUAGE: en
@@ -18,7 +18,7 @@
 #+LATEX_HEADER: \usepackage{lastpage}
 #+LATEX_HEADER: \usepackage{fancyhdr}
 #+LATEX_HEADER: \pagestyle{fancy}
-#+LATEX_HEADER: \chead{Matt's Emacs Config (WSL for Home Machine)}
+#+LATEX_HEADER: \chead{Matt's Emacs Config: Windows-WSL}
 #+LATEX_HEADER: \lhead{}
 #+LATEX_HEADER: \rhead{}
 #+LATEX_HEADER: \cfoot{{Page \thepage} of \pageref{LastPage}}
@@ -210,6 +210,8 @@ Everything else is installed and configured in ~emacs-config.org~.
 #+end_src
 
 * pdftools
+  - For some reason ~M-x list-packages~ sometimes doesn't actually list the ~pdf-tools~ package.  To fix that simply run: ~M-x package-install RET pdf-tools RET~.
+
   - I got the below, very nice, config from here: [[http://alberto.am/2020-04-11-pdf-tools-as-default-pdf-viewer.html][Alberto Alvarez]].
 
 #+BEGIN_SRC emacs-lisp
